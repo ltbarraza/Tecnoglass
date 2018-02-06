@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+	<!-- Configuracion_a_la_BD_mediante_JNDI -->
+	
+	<jee:jndi-lookup jndi-name="jdbc/tecnoglass" id="dataSource"
+		expected-type="javax.sql.DataSource">
+	</jee:jndi-lookup>
+	
+	<!--Habilita_las_anotaciones_de_inyeccion_de_dependencias_de_Spring  -->
+	
+	<context:annotation-config></context:annotation-config>
+	
+	<!--  -->
+	<context:component-scan base-package="dao"></context:component-scan>
+	
+	<!-- Configuracion_de_Hibernate, Fabrica_de_sesiones_de_Hibernate_ya_que_Hibernate_trabaja_con_sessiones   -->	
+	
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property> <!--Hace_referencia_al_dataSource_del_JNDI_para_que_se_conecte_a_la_base_de_datos  -->
+		<property name="packagesToScan" value="pojo"></property> <!--Hace_referencia_a_las_clases_que_van_a_tener_el_mapping_relacional_de_objetos (ORP) es_decir_cada_propiedad_de_la_clase_esta_asignada_a_cada_uno_de_los_campos_de_la_tabla   -->
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop> <!-- Dialecto_para_trabajar_con_bases-de_datos_Mysql -->
+				<prop key="hibernate.show_sql">true</prop> <!-- Muestra_en_consola_las_sentencias_sql_que_va_hacer_hibernate -->
+				<prop key="hibernate.id.new_generator_mappings">false</prop>
+				<prop key="javax.persistence.validation.group.pre-persist">pojo.valid.PersistenceGroup</prop>
+				<prop key="javax.persistence.validation.group.pre-update">pojo.valid.PersistenceGroup</prop>
+				<prop key="javax.persistence.validation.group.pre-remove">pojo.valid.PersistenceGroup</prop>
+
+			</props>
+		</property>
+	</bean>
+	
+	<!-- Va_a_traducir_las_exepciones_hibernate_a_exepciones_spring   -->
+	<bean id="exceptionTranslator"
+		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor">
+	</bean>
+	
+	<!-- Para_Habilitar_transaccionalidad_en_hibernate  -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	<!-- Habilita_las_anotaciones_de_transaccionalidad  -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+</beans>
